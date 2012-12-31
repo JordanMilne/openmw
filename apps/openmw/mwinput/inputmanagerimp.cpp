@@ -40,6 +40,7 @@ namespace MWInput
         , mMouseLookEnabled(true)
         , mMouseX(ogre.getWindow()->getWidth ()/2.f)
         , mMouseY(ogre.getWindow()->getHeight ()/2.f)
+        , mAllowExclusiveFocus(true)
         , mUserFile(userFile)
         , mDragDrop(false)
         , mGuiCursorEnabled(false)
@@ -478,14 +479,26 @@ namespace MWInput
 
         if (mGuiCursorEnabled)
         {
+            // We keep track of our own mouse position, so that moving the mouse while in
+            // game mode does not move the position of the GUI cursor (unless we want it to)
+            float offset_x = float(arg.state.X.rel) * mUISensitivity;
+            float offset_y = float(arg.state.Y.rel) * mUISensitivity * mUIYMultiplier;
+
+            mMouseX += offset_x;
+            mMouseY += offset_y;
+
             const MyGUI::IntSize& viewSize = MyGUI::RenderManager::getInstance().getViewSize();
 
-            // We keep track of our own mouse position, so that moving the mouse while in
-            // game mode does not move the position of the GUI cursor
-            mMouseX += float(arg.state.X.rel) * mUISensitivity;
-            mMouseY += float(arg.state.Y.rel) * mUISensitivity * mUIYMultiplier;
+            // Clamp the mouse position to the viewport
             mMouseX = std::max(0.f, std::min(mMouseX, float(viewSize.width)));
             mMouseY = std::max(0.f, std::min(mMouseY, float(viewSize.height)));
+
+            // Since our pointer may be faster or slower than the actual pointer, warp
+            // the real one around to match ours
+
+            // TODO: Does it matter if we do this while we're in fullscreen mode?
+            if(!mAllowExclusiveFocus)
+                mMouse->warpPos((int)mMouseX, (int)mMouseY);
 
             MyGUI::InputManager::getInstance().injectMouseMove( int(mMouseX), int(mMouseY), arg.state.Z.abs);
         }
@@ -507,9 +520,15 @@ namespace MWInput
     void InputManager::toggleMainMenu()
     {
         if (mWindows.isGuiMode () && (mWindows.getMode () == MWGui::GM_MainMenu || mWindows.getMode () == MWGui::GM_Settings))
+        {
+            allowExclusiveFocus(true);
             mWindows.popGuiMode();
+        }
         else
+        {
             mWindows.pushGuiMode (MWGui::GM_MainMenu);
+            allowExclusiveFocus(false);
+        }
     }
 
     void InputManager::toggleSpell()
@@ -880,6 +899,16 @@ namespace MWInput
         clearAllBindings(control);
         ICS::DetectingBindingListener::joystickSliderBindingDetected (ICS, control, deviceId, slider, direction);
         MWBase::Environment::get().getWindowManager ()->notifyInputActionBound ();
+    }
+
+    void InputManager::allowExclusiveFocus(bool allow)
+    {
+        mAllowExclusiveFocus = allow;
+        mMouse->setAllowExclusive(allow);
+
+        //we're switching to non-exclusive mode, make sure our OS's cursor matches the game's
+        if(!allow)
+            mMouse->warpPos((int)mMouseX, (int)mMouseY);
     }
 
     void InputManager::clearAllBindings (ICS::Control* control)

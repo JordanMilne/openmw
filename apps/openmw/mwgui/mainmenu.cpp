@@ -5,6 +5,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/inputmanager.hpp"
 
 namespace MWGui
 {
@@ -68,6 +69,7 @@ namespace MWGui
 
     void MainMenu::returnToGame(MyGUI::Widget* sender)
     {
+        MWBase::Environment::get().getInputManager ()->allowExclusiveFocus(true);
         MWBase::Environment::get().getWindowManager ()->removeGuiMode (GM_MainMenu);
     }
 

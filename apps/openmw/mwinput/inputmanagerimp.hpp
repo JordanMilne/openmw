@@ -115,6 +115,8 @@ namespace MWInput
         virtual void joystickSliderBindingDetected(ICS::InputControlSystem* ICS, ICS::Control* control
             , int deviceId, int slider, ICS::Control::ControlChangingDirection direction);
 
+        virtual void allowExclusiveFocus(bool allow);
+
         void clearAllBindings (ICS::Control* control);
 
     private:
@@ -147,6 +149,8 @@ namespace MWInput
 
         float mMouseX;
         float mMouseY;
+
+        bool mAllowExclusiveFocus;
 
         std::map<std::string, bool> mControlSwitch;
 
