@@ -484,6 +484,22 @@ namespace MWInput
             float offset_x = float(arg.state.X.rel) * mUISensitivity;
             float offset_y = float(arg.state.Y.rel) * mUISensitivity * mUIYMultiplier;
 
+            // We really don't know where the mouse was before this if we're not in exclusive mode,
+            // it may have even left the window! Reset mMouse(X/Y) based on where we think it was
+            if(!mAllowExclusiveFocus)
+            {
+                int x_diff = arg.state.X.abs - mMouseX;
+                int y_diff = arg.state.Y.abs - mMouseY;
+
+                //the mouse has moved enough between mouse movement calls that it probably left the window
+                //and re-entered, reset it
+                if(x_diff > 5 || x_diff < -5 || y_diff > 5 || y_diff < -5)
+                {
+                    mMouseX = arg.state.X.abs - arg.state.X.rel;
+                    mMouseY = arg.state.Y.abs - arg.state.Y.rel;
+                }
+            }
+
             mMouseX += offset_x;
             mMouseY += offset_y;
 
@@ -494,7 +510,7 @@ namespace MWInput
             mMouseY = std::max(0.f, std::min(mMouseY, float(viewSize.height)));
 
             // Since our pointer may be faster or slower than the actual pointer, warp
-            // the real one around to match ours
+            // the real one around to match ours if it's within the window
 
             // TODO: Does it matter if we do this while we're in fullscreen mode?
             if(!mAllowExclusiveFocus)
