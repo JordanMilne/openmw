@@ -5,6 +5,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/inputmanager.hpp"
 
 namespace MWGui
 {
