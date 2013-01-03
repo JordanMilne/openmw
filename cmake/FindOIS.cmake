@@ -25,6 +25,10 @@ getenv_path(OGRE_HOME)
 getenv_path(OGRE_SOURCE)
 getenv_path(OGRE_DEPENDENCIES_DIR)
 
+if(NOT DEFINED OIS_HOME)
+    set(OIS_HOME "${ENV_OIS_HOME}")
+endif()
+
 # construct search paths
 set(OIS_PREFIX_PATH ${OIS_HOME} ${ENV_OIS_HOME} 
   ${OGRE_DEPENDENCIES_DIR} ${ENV_OGRE_DEPENDENCIES_DIR}
@@ -52,7 +56,7 @@ set(CMAKE_FIND_FRAMEWORK "LAST")
 findpkg_framework(OIS)
 if (OIS_HOME)
   # OIS uses the 'includes' path for its headers in the source release, not 'include'
-  set(OIS_INC_SEARCH_PATH ${OIS_INC_SEARCH_PATH} ${OIS_HOME}/includes)
+  set(OIS_INC_SEARCH_PATH ${OIS_HOME}/includes ${OIS_INC_SEARCH_PATH})
 endif()
 if (APPLE AND OIS_HOME)
   # OIS source build on Mac stores libs in a different location
