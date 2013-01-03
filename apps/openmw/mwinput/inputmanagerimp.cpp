@@ -487,27 +487,20 @@ namespace MWInput
         {
             // We keep track of our own mouse position, so that moving the mouse while in
             // game mode does not move the position of the GUI cursor (unless we want it to)
-            float offset_x = float(arg.state.X.rel) * mUISensitivity;
-            float offset_y = float(arg.state.Y.rel) * mUISensitivity * mUIYMultiplier;
 
-            // We really don't know where the mouse was before this if we're not in exclusive mode,
-            // it may have even left the window! Reset mMouse(X/Y) based on where we think it was
+            //To simplify things, the in-game mouse follows the real pointer in non-exclusive mode.
+            //since 2/3 of the mouse drivers don't raise mouse movement events when the window isn't focused,
+            //We have no way of knowing which events to apply the multiplier to in non-exclusive mode.
             if(!mAllowExclusiveFocus)
             {
-                int x_diff = arg.state.X.abs - mMouseX;
-                int y_diff = arg.state.Y.abs - mMouseY;
-
-                //the mouse has moved enough between mouse movement calls that it probably left the window
-                //and re-entered, reset it
-                if(x_diff > 5 || x_diff < -5 || y_diff > 5 || y_diff < -5)
-                {
-                    mMouseX = arg.state.X.abs - arg.state.X.rel;
-                    mMouseY = arg.state.Y.abs - arg.state.Y.rel;
-                }
+                mMouseX = arg.state.X.abs;
+                mMouseY = arg.state.Y.abs;
             }
-
-            mMouseX += offset_x;
-            mMouseY += offset_y;
+            else
+            {
+                mMouseX += float(arg.state.X.rel) * mUISensitivity;
+                mMouseY += float(arg.state.Y.rel) * mUISensitivity * mUIYMultiplier;
+            }
 
             const MyGUI::IntSize& viewSize = MyGUI::RenderManager::getInstance().getViewSize();
 
@@ -515,13 +508,6 @@ namespace MWInput
             mMouseX = std::max(0.f, std::min(mMouseX, float(viewSize.width)));
             mMouseY = std::max(0.f, std::min(mMouseY, float(viewSize.height)));
             mMouseWheel = arg.state.Z.abs;
-
-            // Since our pointer may be faster or slower than the actual pointer, warp
-            // the real one around to match ours if it's within the window
-
-            // TODO: Does it matter if we do this while we're in fullscreen mode?
-            if(!mAllowExclusiveFocus)
-                mMouse->warpPos((int)mMouseX, (int)mMouseY);
 
             MyGUI::InputManager::getInstance().injectMouseMove( int(mMouseX), int(mMouseY), mMouseWheel);
         }
