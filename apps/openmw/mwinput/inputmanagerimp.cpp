@@ -41,6 +41,7 @@ namespace MWInput
         , mMouseX(ogre.getWindow()->getWidth ()/2.f)
         , mMouseY(ogre.getWindow()->getHeight ()/2.f)
         , mAllowExclusiveFocus(true)
+        , mMouseWheel(0)
         , mUserFile(userFile)
         , mDragDrop(false)
         , mGuiCursorEnabled(false)
@@ -242,6 +243,11 @@ namespace MWInput
         // Tell OIS to handle all input events
         mKeyboard->capture();
         mMouse->capture();
+
+        // inject some fake mouse movement to force updating MyGUI's widget states
+        // this shouldn't do any harm since we're moving back to the original position afterwards
+        MyGUI::InputManager::getInstance().injectMouseMove( int(mMouseX+1), int(mMouseY+1), mMouseWheel);
+        MyGUI::InputManager::getInstance().injectMouseMove( int(mMouseX), int(mMouseY), mMouseWheel);
 
         // update values of channels (as a result of pressed keys)
         if (!loading)
@@ -508,6 +514,7 @@ namespace MWInput
             // Clamp the mouse position to the viewport
             mMouseX = std::max(0.f, std::min(mMouseX, float(viewSize.width)));
             mMouseY = std::max(0.f, std::min(mMouseY, float(viewSize.height)));
+            mMouseWheel = arg.state.Z.abs;
 
             // Since our pointer may be faster or slower than the actual pointer, warp
             // the real one around to match ours if it's within the window
@@ -516,7 +523,7 @@ namespace MWInput
             if(!mAllowExclusiveFocus)
                 mMouse->warpPos((int)mMouseX, (int)mMouseY);
 
-            MyGUI::InputManager::getInstance().injectMouseMove( int(mMouseX), int(mMouseY), arg.state.Z.abs);
+            MyGUI::InputManager::getInstance().injectMouseMove( int(mMouseX), int(mMouseY), mMouseWheel);
         }
 
         if (mMouseLookEnabled)

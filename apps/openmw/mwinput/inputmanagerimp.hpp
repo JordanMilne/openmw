@@ -149,6 +149,7 @@ namespace MWInput
 
         float mMouseX;
         float mMouseY;
+        int mMouseWheel;
 
         bool mAllowExclusiveFocus;
 
